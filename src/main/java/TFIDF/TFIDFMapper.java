@@ -16,12 +16,21 @@ public class TFIDFMapper extends Mapper<LongWritable, Text, Text, Text>
     private HashMap<String, Integer> wordCnt = new HashMap<>();
     private static final String STOPWORDS_FILE_NAME = "cn_stopwords.txt";
 
+    /**
+     * 初始化Mapper，获取当前文件名
+     * @param context 上下文对象，包含配置信息
+     */
     @Override
     protected void setup(Context context)
     {
         filename = ((FileSplit) context.getInputSplit()).getPath().getName();
     }
 
+    /**
+     * 处理每一行数据，统计单词出现次数
+     * @param key 输入的键，表示行号
+     * @param value 输入的值，表示行内容
+     */
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException
     {
@@ -38,6 +47,10 @@ public class TFIDFMapper extends Mapper<LongWritable, Text, Text, Text>
         }
     }
 
+    /**
+     * 在Mapper结束时输出每个单词及其在当前文件中的出现次数
+     * @param context 上下文对象，用于输出结果
+     */
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException
     {
