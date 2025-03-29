@@ -17,7 +17,14 @@ public class TFIDFDriver
 
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(new Path(args[0]));
-        int docCnt = status.length;
+        int docCnt = 0;
+        for (FileStatus fileStatus : status)
+        {
+            if (!fileStatus.getPath().getName().equals("cn_stopwords.txt"))
+            {
+                docCnt++;
+            }
+        }
         conf.setInt("docCnt", docCnt);
         System.out.println("文档总数: " + docCnt);
 

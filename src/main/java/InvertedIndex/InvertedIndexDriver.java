@@ -9,9 +9,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class InvertedIndexDriver
 {
-    public static int run(String[] args) throws Exception
+    public static int run(String[] args, String stopwordsPath) throws Exception
     {
         Configuration conf = new Configuration();
+        if(stopwordsPath != null && !stopwordsPath.isEmpty())
+        {
+            conf.set("stopwordsPath", stopwordsPath);
+            System.out.println("Stopwords filter enabled. Path of stopwords file: " + stopwordsPath);
+        }
+
         Job job = Job.getInstance(conf, "Inverted Index");
 
         job.setJarByClass(InvertedIndexDriver.class);

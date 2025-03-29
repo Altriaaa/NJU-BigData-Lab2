@@ -14,6 +14,7 @@ public class TFIDFMapper extends Mapper<LongWritable, Text, Text, Text>
     private Text docInfo = new Text();
     private String filename;
     private HashMap<String, Integer> wordCnt = new HashMap<>();
+    private static final String STOPWORDS_FILE_NAME = "cn_stopwords.txt";
 
     @Override
     protected void setup(Context context)
@@ -24,6 +25,11 @@ public class TFIDFMapper extends Mapper<LongWritable, Text, Text, Text>
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException
     {
+        // 如果当前文件是停用词文件，则跳过处理
+        if(STOPWORDS_FILE_NAME.equals(filename))
+        {
+            return;
+        }
         StringTokenizer itr = new StringTokenizer(value.toString());
         while(itr.hasMoreTokens())
         {
@@ -35,6 +41,11 @@ public class TFIDFMapper extends Mapper<LongWritable, Text, Text, Text>
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException
     {
+        // 如果当前文件是停用词文件，则不输出任何内容
+        if(STOPWORDS_FILE_NAME.equals(filename))
+        {
+            return;
+        }
         for(Map.Entry<String, Integer> entry : wordCnt.entrySet())
         {
             wordKey.set(entry.getKey());

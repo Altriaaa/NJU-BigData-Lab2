@@ -7,9 +7,11 @@ JAR_FILE="target/Lab2-1.0-SNAPSHOT.jar"
 MAIN_CLASS="Main"
 LOCAL_INPUT="src/test/Input"
 LOCAL_OUTPUT="src/test/Output"
+LOCAL_STOPWORDS="src/test/Stopwords"
 HDFS_INPUT="/Input"
 HDFS_OUTPUT="/Output"
-OPTIONS=""
+HDFS_STOPWORDS="/Stopwords"
+OPTIONS=()
 
 # 选择操作模式
 echo "请选择操作模式:"
@@ -18,14 +20,28 @@ echo "2) TF-IDF 计算"
 read operation_mode
 
 if [[ $operation_mode == "2" ]]; then
-    OPTIONS="-t"
+    OPTIONS+=("-t")
     echo "已选择 TF-IDF 模式"
 else
     echo "已选择 倒排索引 模式"
+
+    echo "是否过滤停用词? (y/n)"
+    read remove_stopwords
+    if [[ $remove_stopwords == "y" || $remove_stopwords == "Y" ]]; then
+        # 上传停用词文件到HDFS
+        echo "上传停用词文件到HDFS..."
+        hadoop fs -rm -r ${HDFS_STOPWORDS} 2>/dev/null
+        hadoop fs -mkdir -p ${HDFS_STOPWORDS}
+        hadoop fs -put ${LOCAL_STOPWORDS}/cn_stopwords.txt ${HDFS_STOPWORDS}/
+
+        OPTIONS+=("-r" "${HDFS_STOPWORDS}/cn_stopwords.txt")
+        echo "已启用停用词过滤"
+    fi
+
     echo "是否执行排序? (y/n)"
     read test_sort
     if [[ $test_sort == "y" || $test_sort == "Y" ]]; then
-        OPTIONS="-s"
+        OPTIONS+=("-s")
         echo "已启用排序"
     fi
 fi
@@ -46,7 +62,7 @@ hadoop fs -put ${LOCAL_INPUT}/* ${HDFS_INPUT}/
 
 # 步骤4: 运行MapReduce作业
 echo "运行MapReduce作业..."
-hadoop jar ${JAR_FILE} ${MAIN_CLASS} ${OPTIONS} ${HDFS_INPUT} ${HDFS_OUTPUT}
+hadoop jar ${JAR_FILE} ${MAIN_CLASS} "${OPTIONS[@]}" ${HDFS_INPUT} ${HDFS_OUTPUT}
 
 # 步骤5: 准备本地输出目录
 echo "准备本地输出目录..."
@@ -54,7 +70,7 @@ rm -rf ${LOCAL_OUTPUT}
 mkdir -p ${LOCAL_OUTPUT}
 
 # 步骤6: 将结果下载到本地
-if [[ $operation_mode != "2" && -n "${OPTIONS}" ]]; then
+if [[ $operation_mode != "2" && $test_sort == "y" || $test_sort == "Y" ]]; then
     # 倒排索引模式 + 排序
     echo "下载排序结果到本地..."
     hadoop fs -get ${HDFS_OUTPUT}_sorted/* ${LOCAL_OUTPUT}/
